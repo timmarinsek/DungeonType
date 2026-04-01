@@ -8,16 +8,18 @@ interface Position{
 
 class Map{
     public grid: number[][] = [
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1],
-        [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1],
-        [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1],
-        [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1],
-        [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1],
-        [1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1],
+        [1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1],
+        [1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1],
+        [1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1],
+        [1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1],
+        [1, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     ];
 
     canMoveTo(x: number, y: number): boolean {
@@ -76,6 +78,41 @@ class Player {
     }
 
 }
+class Enemy {
+    public moveCounter: number = 0;
+
+    constructor(public position: {x: number, y: number}, public symbol: string = "M") {}
+
+    update(playerPos: {x: number, y: number}, map: Map, placedTorches: {x: number, y: number}[]) {
+        this.moveCounter++;
+        
+        if (this.moveCounter < 2) return;
+        this.moveCounter = 0;
+
+        const dx = playerPos.x - this.position.x;
+        const dy = playerPos.y - this.position.y;
+
+        let nextX = this.position.x;
+        let nextY = this.position.y;
+
+        if (Math.abs(dx) > Math.abs(dy)) {
+            nextX += dx > 0 ? 1 : -1;
+        } else if (dy !== 0) {
+            nextY += dy > 0 ? 1 : -1;
+        }
+
+        const isWall = (map.grid[nextY]?.[nextX] ?? 1) === 1;
+        const isTorch = placedTorches.some(t => t.x === nextX && t.y === nextY);
+
+        if (!isWall && !isTorch) {
+            this.position.x = nextX;
+            this.position.y = nextY;
+        }
+    }
+}
+
+const enemy = new Enemy({ x: 20, y: 10 });
+
 
 const placedTorches: Position[] = [];
 const map  = new Map();
@@ -111,7 +148,10 @@ function draw(){
                 
                 if (player.position.x === x && player.position.y === y) {
                     rowStr += player.symbol+ " "; 
-                }else if(hasTorch){
+                }else if (enemy.position.x === x && enemy.position.y === y) {
+                    rowStr += "M ";
+                }
+                else if(hasTorch){
                     rowStr += "T ";
                 } else if ((map.grid[y]?.[x] ?? 0) === 1) {
                     rowStr += "# ";
@@ -133,17 +173,28 @@ process.stdin.on('keypress', (str, key) => {
     if(key.name === 'q') {
         process.exit();
     }
+    let moved = false;
     switch(key.name) {
         case 'up':
-            player.move(0, -1, map); break;
+            player.move(0, -1, map); moved = true; break;
         case 'down':
-            player.move(0, 1, map); break;
+            player.move(0, 1, map); moved = true; break;
         case 'left':
-            player.move(-1, 0, map); break;
+            player.move(-1, 0, map); moved = true; break;
         case 'right':
-            player.move(1, 0, map); break;
+            player.move(1, 0, map); moved = true; break;
         case 'space':
             player.placeTorch();
+    }
+    if (moved) {
+        enemy.update(player.position, map, placedTorches);
+        
+        
+        if (player.position.x === enemy.position.x && player.position.y === enemy.position.y) {
+            draw();
+            console.log("\n--- DUH TE JE UJEL! KONEC IGRE ---");
+            process.exit();
+        }
     }
     draw();
 
