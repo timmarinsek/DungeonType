@@ -81,7 +81,7 @@ class Player {
 class Enemy {
     public moveCounter: number = 0;
 
-    constructor(public position: {x: number, y: number}, public symbol: string = "M") {}
+    constructor(public position: {x: number, y: number}, public symbol: string = "O") {}
 
     update(playerPos: {x: number, y: number}, map: Map, placedTorches: {x: number, y: number}[]) {
         this.moveCounter++;
@@ -92,21 +92,37 @@ class Enemy {
         const dx = playerPos.x - this.position.x;
         const dy = playerPos.y - this.position.y;
 
-        let nextX = this.position.x;
-        let nextY = this.position.y;
+        let moveX = dx !== 0 ? (dx > 0 ? 1 : -1) : 0;
+        let moveY = dy !== 0 ? (dy > 0 ? 1 : -1) : 0;
 
-        if (Math.abs(dx) > Math.abs(dy)) {
-            nextX += dx > 0 ? 1 : -1;
-        } else if (dy !== 0) {
-            nextY += dy > 0 ? 1 : -1;
-        }
+        const isFree = (nx: number, ny: number) => {
+            const isWall = (map.grid[ny]?.[nx] ?? 1) === 1;
+            const isTorch = placedTorches.some(t => t.x === nx && t.y === ny);
+            return !isWall && !isTorch;
+        };
 
-        const isWall = (map.grid[nextY]?.[nextX] ?? 1) === 1;
-        const isTorch = placedTorches.some(t => t.x === nextX && t.y === nextY);
-
-        if (!isWall && !isTorch) {
-            this.position.x = nextX;
-            this.position.y = nextY;
+        // premik po osi, kjer je razdalja večja
+        if (Math.abs(dx) >= Math.abs(dy)) {
+            if (isFree(this.position.x + moveX, this.position.y)) {
+                this.position.x += moveX;
+                return;
+            } 
+            // ce je X blokiran, poskusi Y (fallback)
+            if (isFree(this.position.x, this.position.y + moveY)) {
+                this.position.y += moveY;
+                return;
+            }
+        } else {
+            // premik po Y osi
+            if (isFree(this.position.x, this.position.y + moveY)) {
+                this.position.y += moveY;
+                return;
+            }
+            // ce je Y blokiran, poskusi X (fallback)
+            if (isFree(this.position.x + moveX, this.position.y)) {
+                this.position.x += moveX;
+                return;
+            }
         }
     }
 }
